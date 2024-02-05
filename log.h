@@ -18,7 +18,7 @@ extern int g_usr_log_def;
 #define TLog(fmt, args...) \
 do{\
 	if(g_usr_log_def >= g_log_level) {\
-		printf(fmt, args);\
+		printf(fmt, ##args);\
 	}\
 }while(0)
 
@@ -26,7 +26,7 @@ do{\
 #define TLogSTD(level, fmt, args...) \
 do{\
 	if(level >= g_log_level) {\
-		printf(fmt, args);\
+		printf(fmt, ##args);\
 	}\
 }while(0)
 

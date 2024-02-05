@@ -16,8 +16,8 @@ int main()
 
 	//test_seg(dname);
 
-	test_list();
-	
+	test_pcap_req();
+
 	return 0;
 }
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <pcap.h>
 
 #include "comm.h"
 #include "log.h"
@@ -277,5 +278,279 @@ void test_list()
 
 	return;
 }
+
+
+void dump_ipv4(uint8_t *bytes)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+	TLog("%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
+#else
+	TLog("%d.%d.%d.%d\n", bytes[0], bytes[1], bytes[2], bytes[3]);
+#endif
+}
+
+void test_dns_req(u_char *packet)
+{
+	int 					   ret;
+	int 					   i, j;
+	int 					   is_locked = 0;
+	int 					   old_len;
+	dns_rrset_t *			   rr;
+	int 					   answer_rr_cnt;
+	uint32_t				   max_ttl = 0;
+	uint32_t				   min_ttl = 0;
+	rr_list_t * 			   rr_list;
+	rr_priority_t * 		   rr_priority;
+	char *					   new_data = NULL, *old_data = NULL;
+	uint32_t				   new_len = 0;
+	struct query_data * 	   query_data;
+	struct dns_ans_node *	   ans_node 	 = NULL;
+	struct dns_ans_node *	   ans_node_temp = NULL;
+	int    array_entry_num = 0;
+	uint8_t 				   is_ipv6 = 0;
+	int new_vid = 0;
+	uint32_t				   ttl_tmp = 0, ttl_switch = 0;
+	uint8_t 				   nxr_data_flag = 0;
+	struct iphdr *			 iph			  = NULL;
+	struct udphdr * 		 udph			  = NULL;
+	dnshdr * 				 dnsh			  = NULL;
+	uint8_t *				 dname			  = NULL;
+	uint16_t				 pkt_len		  = 0;
+	uint16_t				 dn_len 		  = 0;
+	struct query_data * 	 q_data 		  = NULL;
+	struct report_stat_info *report_stat_info = NULL;
+
+
+	struct iphdr a ;
+	struct udphdr b;
+	int dns_packet_all_header_len = sizeof(a) + sizeof(b) + sizeof(dnshdr);
+
+	TLog("\n\n -----------------------------------------------\n");
+	TLog("-----------------------------------------------\n");
+	TLog("-----------------------------------------------\n");
+	//ip_header = (struct ip *)(packet + 14); // 偏移以跳过以太网帧首部
+	packet = packet + 14;
+	iph 	= packet;
+	udph	= (struct udphdr *)((char *)iph + sizeof(struct iphdr));
+	dnsh	= (dnshdr *)((char *)udph + sizeof(struct udphdr));
+	dname	= (unsigned char *)((unsigned char *)dnsh + sizeof(dnshdr));
+	pkt_len = ntohs(iph->tot_len);
+	dn_len	= get_dname_len(dname, pkt_len - dns_packet_all_header_len - sizeof(struct query_data));
+	q_data	= (struct query_data *)(dname + dn_len + 1);
+	answer_rr_cnt = ntohs(dnsh->ancount);
+
+	ans_node = malloc(sizeof(ans_node)+pkt_len);
+
+	if(!ans_node) {
+		TLog("Kalloc ansnode failed\n ------------");
+	}
+
+	memset(ans_node, 0, sizeof(ans_node));
+	ans_node->data	   = (uint8_t *)dnsh;
+	ans_node->data_len = pkt_len;
+	ans_node->qd	   = q_data;
+
+	ans_node->answer_rr_cnt    = answer_rr_cnt;
+	ans_node->dname_len 	   = dn_len;
+	ans_node->rr_data_len	   = 4;
+	ans_node->updatesec 	   = 1; //更新的时间jiff
+	ans_node->ctl_jiff		   = 1; //更新的时间jiff
+	ans_node->freaze_ttl_cycle = 0;
+	INIT_LIST_HEAD(&ans_node->rr_priority_list);
+
+
+	//创建新的数据
+	{
+		rr = (dns_rrset_t *)ans_node->qd->rr_hdr;
+		for (i = 0; i < answer_rr_cnt; i++) {
+			if ((ntohs(rr->compress_dname) & 0xc000) != 0xc000) {
+				goto FAIL;
+			}
+			if (rr->rr_type == htons(ns_t_a) || rr->rr_type == htons(ns_t_aaaa)) {
+				ans_node->a_or_aaaa_rr_num++;
+			}
+			rr = (dns_rrset_t *)((uint8_t *)rr + sizeof(dns_rrset_t) + ntohs(rr->rr_len));
+		}
+		//ans_node->a_or_aaaa_rr_num = 1;
+
+		ans_node->a_or_aaaa_rr_offset = malloc(sizeof(uint16_t) * ans_node->a_or_aaaa_rr_num);
+		if (ans_node->a_or_aaaa_rr_offset == NULL) {
+			goto FAIL;
+		}
+
+		ans_node->answer_ttl_offset = malloc(sizeof(uint16_t) * answer_rr_cnt);
+		if (ans_node->answer_ttl_offset == NULL) {
+			goto FAIL;
+		}
+
+		rr = (dns_rrset_t *)ans_node->qd->rr_hdr;
+		for (i = 0, j = 0; i < answer_rr_cnt; i++) {
+			ans_node->answer_ttl_offset[i] = (uint8_t *)&rr->rr_ttl - ans_node->data;
+			ttl_tmp 					   = ntohl(*(uint32_t *)(&rr->rr_ttl));
+			if (0 == i) {
+				ans_node->ttl = ttl_tmp;
+			} else if (ans_node->ttl > ttl_tmp) {
+				ans_node->ttl = ttl_tmp;
+			}			 
+			if(ttl_tmp > max_ttl && ttl_switch){
+				rr->rr_ttl = htonl(max_ttl);
+				ans_node->ttl = max_ttl;
+			}
+			if (rr->rr_type == htons(ns_t_a) || rr->rr_type == htons(ns_t_aaaa)) {
+				ans_node->a_or_aaaa_rr_offset[j++] = (uint8_t *)&rr->data - ans_node->data;
+			}
+			rr = (dns_rrset_t *)((uint8_t *)rr + sizeof(dns_rrset_t) + ntohs(rr->rr_len));
+		}
+
+		if (ans_node->a_or_aaaa_rr_num != 0) {
+			rr_priority = malloc(sizeof(rr_priority_t));
+			if (rr_priority == NULL) {
+				goto FAIL;
+			}
+
+			rr_priority->priority = 255;
+			list_add(&rr_priority->lnode, &ans_node->rr_priority_list);
+		}
+
+		rr = (dns_rrset_t *)ans_node->qd->rr_hdr;
+		for (i = 0; i < ans_node->a_or_aaaa_rr_num; i++) {
+			rr_list = malloc(sizeof(rr_list_t));
+			if (rr_list == NULL) {
+				goto FAIL;
+			}
+			
+			rr_list->ori_weight = 2;
+			rr_list->cur_weight = 2;
+			
+			memcpy(rr_list->ans.data, ans_node->data + ans_node->a_or_aaaa_rr_offset[i], ans_node->rr_data_len);
+			if (NULL == rr_priority->rr_list) {
+				rr_priority->rr_list = rr_list;
+				INIT_LIST_HEAD(&rr_priority->rr_list->lnode);
+			} else {
+				list_add(&rr_list->lnode, &rr_priority->rr_list->lnode);
+			}
+		}
+	}
+
+
+
+
+
+	// 遍历链表，查询响应
+	struct dns_ans_node *	   ans	 = ans_node;
+	int q_num = 10;
+	int req = 0;
+	struct list_head *list_head;
+
+
+	TLog("---------------------------------\n");
+	list_for_each_entry(rr_priority, &ans->rr_priority_list, lnode) {
+		j = 0;
+		rr_list   = rr_priority->rr_list;	
+		list_head = &rr_priority->rr_list->lnode;
+		
+		TLog("Loop time %d; ans-num %d; %p ,%p %p\n", j++, req, rr_list, list_first_entry(list_head, rr_list_t, lnode), 
+		list_head);
+		list_for_each_entry(rr_list, list_head, lnode) {
+			//memcpy(data + ans->a_or_aaaa_rr_offset[i++], rr_list->ans.data, ans->rr_data_len);
+			TLog("Loop time %d; ans-num %d; %p %p\n", j++, req, rr_list, rr_list->lnode);
+			hexdump(rr_list->ans.data, ans->rr_data_len);
+			dump_ipv4((unsigned char *)rr_list->ans.data);
+		}
+	}
+
+
+
+	TLog("---------------------------------\n");
+	//char data[128] = {};
+	for(req=0; req<q_num; req++)
+	{
+		int j = 0;
+		list_for_each_entry(rr_priority, &ans->rr_priority_list, lnode) {
+			if (rr_priority->rr_list != NULL) {
+				list_head = &rr_priority->rr_list->lnode;
+				rr_list   = rr_priority->rr_list;
+				rr_list->cur_weight -= 1;
+				if (rr_list->cur_weight == 0) {
+					rr_list->cur_weight  = rr_list->ori_weight;
+					rr_priority->rr_list = list_first_entry(list_head, rr_list_t, lnode);
+				}
+				
+				//memcpy(data + ans->a_or_aaaa_rr_offset[i++], rr_list->ans.data, ans->rr_data_len);
+				TLog("Loop time %d; ans-num %d; %p\n", j++, req, rr_list);
+				hexdump(rr_list->ans.data, ans->rr_data_len);
+				dump_ipv4((unsigned char *)rr_list->ans.data);
+				
+				list_for_each_entry(rr_list, list_head, lnode) {
+					//memcpy(data + ans->a_or_aaaa_rr_offset[i++], rr_list->ans.data, ans->rr_data_len);
+				TLog("Loop time %d; ans-num %d; %p\n", j++, req, rr_list);
+					hexdump(rr_list->ans.data, ans->rr_data_len);
+					dump_ipv4((unsigned char *)rr_list->ans.data);
+				}
+			}
+		}
+		
+		TLog("====================Resp %d Done===================\n", req);
+	}
+
+	TLog("---------------------------------\n");
+	list_for_each_entry(rr_priority, &ans->rr_priority_list, lnode) {
+		j = 0;
+		rr_list   = rr_priority->rr_list;	
+		list_head = &rr_priority->rr_list->lnode;
+		
+		TLog("Loop time %d; ans-num %d; %p ,%p %p\n", j++, req, rr_list, list_first_entry(list_head, rr_list_t, lnode), 
+		list_head);
+		list_for_each_entry(rr_list, list_head, lnode) {
+			//memcpy(data + ans->a_or_aaaa_rr_offset[i++], rr_list->ans.data, ans->rr_data_len);
+			TLog("Loop time %d; ans-num %d; %p\n", j++, req, rr_list);
+			hexdump(rr_list->ans.data, ans->rr_data_len);
+			dump_ipv4((unsigned char *)rr_list->ans.data);
+		}
+	}
+	
+	return;
+FAIL:
+	
+	TLog("-----------------FAILED--------------------------\n");
+	if(ans_node){
+		free(ans_node);
+	}
+	return;
+}
+
+
+
+
+
+int test_pcap_req(void) 
+{
+    pcap_t *handle;
+    char errbuf[PCAP_ERRBUF_SIZE];
+    struct pcap_pkthdr header;
+    const u_char *packet;
+    
+    // 打开 pcap 文件
+    handle = pcap_open_offline("test.pcap", errbuf);
+    if (handle == NULL) {
+        TLog("无法打开 pcap 文件: %s\n", errbuf);
+        return 1;
+    }
+    
+    // 逐个读取数据包并进行处理
+    int i = 0;
+    while (packet = pcap_next(handle, &header)) {
+		if(i != 0 ) {
+			test_dns_req(packet);
+		}
+		i++;
+    }
+    
+    // 关闭 pcap 文件
+    pcap_close(handle);
+    
+    return 0;
+}
+
 
 

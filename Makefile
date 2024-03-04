@@ -10,7 +10,7 @@ OBJS := $(SRCS:.c=.o)
 CC := gcc
 
 CFLAGS := -Wall -g
-CFLAGS += -lpcap
+CFLAGS += -lpcap -lpfring
 
 #增加头文件路径
 #CFLAGS += -I/usr/src/kernels/5.10.0-136.37.0.113.ky10.x86_64/include/ -I/usr/src/kernels/5.10.0-136.37.0.113.ky10.x86_64/arch/x86/include/generated

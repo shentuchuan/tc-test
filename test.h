@@ -4,29 +4,6 @@
 #include "comm.h"
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void hexdump(const void *buf, unsigned int len);
 void test_seg(char *dname);
 void trans_to_dname_format(char *src_dn, char *dst_dn);

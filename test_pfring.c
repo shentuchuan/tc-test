@@ -60,7 +60,7 @@ void print_stats() {
   static u_int64_t lastBytes = 0;
   static unsigned long long numLine = 0;
   static unsigned long long lastDrop = 0;
-
+	return ;
   if(pfring_stats(pd, &pfringStat) >= 0) {
     /* 1-line stats */
     printf("%llu sec pkts %llu drop %llu bytes %llu | pkts %llu bytes %llu drop %llu\n",
@@ -317,7 +317,7 @@ int test_pfring_backup(int argc, char* argv[])
     printf("pfring_set_cluster returned %d\n", rc);
   }
 
-  if((rc = pfring_set_direction(pd, direction)) != 0)
+  if((rc = pfring_set_direction(pd, rx_and_tx_direction)) != 0)
     fprintf(stderr, "pfring_set_direction returned %d (perhaps you use a direction other than rx only with ZC?)\n", rc);
 
   if((rc = pfring_set_socket_mode(pd, send_and_recv_mode)) != 0)

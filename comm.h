@@ -18,9 +18,6 @@
 #include "list.h"
 
 
-#define BYTE_ORDER LITTLE_ENDIAN
-
-
 #pragma pack(push)
 #pragma pack(1)
 

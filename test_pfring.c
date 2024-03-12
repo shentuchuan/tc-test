@@ -31,7 +31,7 @@
 
 #define ALARM_SLEEP             3
 #define DEFAULT_SNAPLEN       2048
-#define DEFAULT_DEVICE     "lo"
+#define DEFAULT_DEVICE     "eth0"
 #define NO_ZC_BUFFER_LEN     9000
 
 u_int clusterId = 0;
@@ -148,6 +148,34 @@ void printHelp(void) {
   printf("-d <time>       Maximum capture duration (sec)\n");
 }
 
+
+
+int stringContains(const char* str, const char* substr, int len) {
+    const char* p1 = str;
+    const char* p2 = substr;
+    int i = 0;
+	for(i = 0; i<len; i++){
+        if (*p1 == *p2) {
+            const char* temp1 = p1;
+            const char* temp2 = p2;
+            
+            while (*temp1 && *temp2 && *temp1 == *temp2) {
+                temp1++;
+                temp2++;
+            }
+            
+            if (!*temp2) {
+                return 1;
+            }
+        }
+        p1++;
+    }
+    
+    return 0;
+}
+
+
+
 /* *************************************** */
 
 void* packet_consumer_thread(void* _id) {
@@ -177,13 +205,14 @@ void* packet_consumer_thread(void* _id) {
 			  break;
 			}
       }
-	  hexdump(buffer_p, hdr.caplen);
       //pcap_dump((u_char*)dumper, (struct pcap_pkthdr*)&hdr, buffer), numPkts++;
       numBytes += hdr.len+24 /* 8 Preamble + 4 CRC + 12 IFG */;
+	  if(stringContains(buffer_p, "abc", hdr.caplen)) {
+		  hexdump(buffer_p, hdr.caplen);
+	  }
 	  rc = pfring_send(pd, (char *) buffer_p, hdr.caplen, 1);
-	  
-	  if(rc < 0)
-		printf("pfring_send(caplen=%u <= l2+mtu(%u)?) error %d\n", hdr.caplen, pfring_get_mtu_size(pd), rc);
+//	  if(rc < 0)
+//		printf("pfring_send(caplen=%u <= l2+mtu(%u)?) error %d\n", hdr.caplen, pfring_get_mtu_size(pd), rc);
 
       //			curTs = hdr.ts.tv_sec; /* current timestamp - rschmidt - not needed */
     } else {

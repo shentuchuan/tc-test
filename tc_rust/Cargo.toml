@@ -1,0 +1,12 @@
+[package]
+name = "tc_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libc = { version = "0.2", default-features = false }
+serde = { path = "/root/tuchuan/serde-1.0.197/serde", default-features = false }
+serde_derive = { path = "/root/tuchuan/serde-1.0.197/serde_derive" }
+serde_json = "1.0"

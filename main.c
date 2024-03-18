@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "test_pfring.h"
 #include "test.h"
+#include "tc_json.h"
+
 
 int main(int argc, char* argv[])
 {
@@ -19,8 +20,7 @@ int main(int argc, char* argv[])
 
 	//test_pcap_req();
 
-	test_pfring(argc, argv);
-
+	tc_json_test(argc, argv);
 
 	return 0;
 }

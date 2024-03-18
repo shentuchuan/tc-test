@@ -2,7 +2,6 @@
 #include <string.h>
 #include <pcap.h>
 #include <unistd.h>
-#include <pfring.h>
 
 #include "comm.h"
 #include "log.h"
@@ -550,4 +549,3 @@ int test_pcap_req(void)
     
     return 0;
 }
-

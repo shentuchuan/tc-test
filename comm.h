@@ -17,6 +17,7 @@
 
 #include "list.h"
 
+#define ARRAY_LENGTH(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #pragma pack(push)
 #pragma pack(1)

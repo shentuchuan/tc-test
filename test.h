@@ -16,7 +16,7 @@ void test_set_first(rr_list_t *rr_head, int idx);
 
 
 void test_list_for_each(rr_list_t *rr_head);
-
+void cpu_affinity_set(pthread_t thread_id, int cpuCore);
 
 #endif
 

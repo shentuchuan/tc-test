@@ -30,14 +30,21 @@ LAST_LIBS += -ltc_rust -lyyjson
 #关闭未使用变量告警
 #CFLAGS += -Wno-unused-but-set-variable
 
+#第三方库
+THIRD_LIBS = tcrust
+
+all : ${THIRD_LIBS} cbuild
 
 # 默认目标，即执行make命令时的默认行为
-all: $(OBJS)
+cbuild: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $(APP) ${LAST_LIBS}
 
 # 编译每个源文件为对应的目标文件
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+tcrust:
+	cd ./tc_rust ; cargo build --release --lib ; cd ..
 
 # 清理编译生成的文件
 clean:

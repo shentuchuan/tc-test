@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
-#include <yyjson.h>
+//#include <yyjson.h>
 
 #include "comm.h"
 #include "test.h"
@@ -33,6 +33,7 @@ void nap_cmd_dump(nap_cmd_t *nap_cmd)
     }
 }
 
+#if 0
 void yyjson_to_nap_cmd(nap_cmd_t *nap_cmd, yyjson_doc *doc)
 {
     yyjson_val *root = yyjson_doc_get_root(doc);
@@ -356,3 +357,4 @@ int tc_json_test(int argc, char *argv[])
     pthread_join(pid, NULL);
     return 0;
 }
+#endif 

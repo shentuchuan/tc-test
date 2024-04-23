@@ -13,6 +13,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
+#include <pthread.h>
 
 
 #include "list.h"

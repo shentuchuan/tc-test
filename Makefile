@@ -49,3 +49,7 @@ tcrust:
 # 清理编译生成的文件
 clean:
 	rm -f $(OBJS) $(APP)
+
+
+tc-py:
+	pyinstaller .\tc_test.py ; 	pyinstaller .\tc_test.spec 

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-#from win10toast import ToastNotifier
+# from win10toast import ToastNotifier
 from tkinter import *
 import threading
 import time
@@ -11,13 +11,13 @@ def say_hi():
 
 
 def my_timer_function():
-    #print(f"定时器触发了！")
+    # print(f"定时器触发了！")
     while 1:
         root = Tk()
 
         frame1 = Frame(root)
         frame2 = Frame(root)
-        root.title("久坐定时器")
+        root.title("喝水记时")
 
         label = Label(frame1, text="Label", justify=LEFT)
         label.pack(side=LEFT)
@@ -29,7 +29,7 @@ def my_timer_function():
         frame2.pack(padx=200, pady=200)
 
         root.mainloop()
-        remind_time = 3
+        remind_time = 45*60
         time.sleep(remind_time)
 
 
@@ -64,4 +64,3 @@ def test_gui():
 
 if __name__ == '__main__':
     test_gui()
-

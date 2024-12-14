@@ -1,0 +1,7 @@
+{
+  "type": "getConfig",
+  "msg_id": "100ab",
+  "data": [
+    "vlan_member"
+  ]
+}

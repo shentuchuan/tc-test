@@ -1,0 +1,20 @@
+{
+    "type": "getConfig",
+    "msg_id": "100ab",
+    "data": [
+        "remote_protocols",
+        "device",
+        "ip",
+        "loop_guard",
+        "port_setting",
+        "port_mirroring",
+        "port_isolate",
+        "static_mac",
+        "filter_mac",
+        "vlan_member",
+        "vlan_setting",
+        "port_limit_rate",
+        "storm_control",
+        "poe_control"
+    ]
+}

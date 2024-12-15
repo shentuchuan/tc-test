@@ -1,0 +1,25 @@
+{
+    "type": "setConfig",
+    "msg_id": "20001",
+    "data": {
+        "port_setting": [
+            {
+                "p": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ],
+                "en": 1,
+                "sp": 10000,
+                "du": 1,
+                "fc_p": 1,
+                "EEE": 1
+            }
+        ]
+    },
+    "response": {
+        "wait_time": 5
+    }
+}

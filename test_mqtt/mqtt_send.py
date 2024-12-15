@@ -54,7 +54,7 @@ def create_client(mqtt_client_id):
     # client.subscribe([("demo", 0), ("test", 2)])      #  test主题，订阅者订阅此主题，即可接到发布者发布的数据
 
     # 订阅主题 实现双向通信中接收功能，qs质量等级为2
-    gclient.subscribe(("test", 2))
+    gclient.subscribe([("hongrui/sw/C171Z1YM000000/rx", 1), ("hongrui/sw/C171Z1YM000000/event", 1), ("hongrui/sw/C171Z1YM000000/period", 1)])
     gclient.loop_start()
 
 
@@ -115,7 +115,7 @@ def send_mqtt_set():
             # payload:要发送的实际消息。如果没有给出，或设置为无，则将使用零长度消息。 传递int或float将导致有效负载转换为表示该数字的字符串。 如果你想发送一个真正的int / float，使用struct.pack（）来创建你需要的负载
             # qos:服务的质量级别 对于Qos级别为1和2的消息，这意味着已经完成了与代理的握手。 对于Qos级别为0的消息，这只意味着消息离开了客户端。
             # retain:如果设置为True，则该消息将被设置为该主题的“最后已知良好” / 保留的消息
-            gclient.publish(topic="hongrui/sw/C171Z1YM000000/tx", payload=json_string, qos=2)
+            gclient.publish(topic="hongrui/sw/C171Z1YM000000/tx", payload=json_string, qos=1)
             time.sleep(5)
             # i += 1
         except KeyboardInterrupt:
@@ -131,3 +131,6 @@ if __name__ == '__main__':
     glog = log_init(logfield_path)
     create_client(mqtt_client_id)
     send_mqtt_get()
+    while True:
+        pass
+        time.sleep(3)

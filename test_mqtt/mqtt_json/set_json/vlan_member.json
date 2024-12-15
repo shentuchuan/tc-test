@@ -1,0 +1,19 @@
+{
+    "type": "setConfig",
+    "msg_id": "20001",
+    "data": {
+        "vlan_member": [
+            {
+                "id": 60,
+                "cmd": "add"
+            },
+            {
+                "id": 13,
+                "cmd": "del"
+            }
+        ]
+    },
+    "response": {
+        "wait_time": 5
+    }
+}

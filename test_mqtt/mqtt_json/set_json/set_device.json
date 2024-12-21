@@ -1,0 +1,9 @@
+{
+    "type": "setConfig",
+    "msg_id": "20001",
+    "data": {
+        "device": {
+            "n": "mqtt_test"
+        }
+    }
+}

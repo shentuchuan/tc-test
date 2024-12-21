@@ -1,0 +1,14 @@
+{
+    "type": "update",
+    "msg_id": "maes1ooW",
+    "data": {
+        "version": "v1.0.1",
+        "download": [
+            "http://192.168.0.10/sw/abcv1.0.1.pkg"
+        ],
+        "md5": "1d0590502f4d8135b8b1879fb7473874",
+        "encryption": "aes-128-cbc",
+        "secret_key": "kdqxmktw4iG",
+        "method": 1
+    }
+}

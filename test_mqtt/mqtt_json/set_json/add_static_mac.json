@@ -1,0 +1,14 @@
+{
+    "type": "setConfig",
+    "msg_id": "20005",
+    "data": {
+        "static_mac": [
+            {
+                "mac": "c4:c6:e6:71:4b:00",
+                "vid": 1,
+                "p": 2,
+                "cmd": "add"
+            }
+        ]
+    }
+}

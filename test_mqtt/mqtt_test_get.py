@@ -40,14 +40,14 @@ def create_client(mqtt_client_id):
     global gclient
     # 实例化
     gclient = mqtt.Client(client_id=mqtt_client_id)
-    gclient.username_pw_set("test", "password")
+    gclient.username_pw_set("ik_test", "eiChaes7")
     # 回调函数
     gclient.on_connect = on_connect
     gclient.on_subscribe = on_subscribe
     gclient.on_message = on_message
     gclient.on_log = on_log
     # host为启动的broker地址 举例本机启动的ip 端口默认1883
-    gclient.connect(host="127.0.0.1", port=10883, keepalive=6000)  # 订阅频道
+    gclient.connect(host="192.168.0.100", port=10883, keepalive=6000)  # 订阅频道
     time.sleep(1)
 
     # 多个主题采用此方式
@@ -130,7 +130,6 @@ if __name__ == '__main__':
 
     glog = log_init(logfield_path)
     create_client(mqtt_client_id)
-    send_mqtt_get()
     while True:
-        pass
-        time.sleep(3)
+        send_mqtt_get()
+        time.sleep(5)

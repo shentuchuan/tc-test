@@ -4,7 +4,19 @@
     "data": {
         "vlan_member": [
             {
+                "id": 1,
+                "cmd": "add"
+            },
+            {
+                "id": 15,
+                "cmd": "add"
+            },
+            {
                 "id": 60,
+                "cmd": "add"
+            },
+            {
+                "id": 61,
                 "cmd": "add"
             },
             {

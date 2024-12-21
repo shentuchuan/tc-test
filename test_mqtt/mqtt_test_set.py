@@ -40,23 +40,21 @@ def create_client(mqtt_client_id):
     global gclient
     # 实例化
     gclient = mqtt.Client(client_id=mqtt_client_id)
-    gclient.username_pw_set("test", "password")
+    gclient.username_pw_set("ik_test", "eiChaes7")
     # 回调函数
     gclient.on_connect = on_connect
     gclient.on_subscribe = on_subscribe
     gclient.on_message = on_message
     gclient.on_log = on_log
     # host为启动的broker地址 举例本机启动的ip 端口默认1883
-    gclient.connect(host="127.0.0.1", port=10883, keepalive=6000)  # 订阅频道
+    gclient.connect(host="192.168.0.100", port=10883, keepalive=6000)  # 订阅频道
     time.sleep(1)
 
     # 多个主题采用此方式
     # client.subscribe([("demo", 0), ("test", 2)])      #  test主题，订阅者订阅此主题，即可接到发布者发布的数据
 
     # 订阅主题 实现双向通信中接收功能，qs质量等级为2
-    gclient.subscribe(("hongrui/sw/C171Z1YM000000/rx", 1))
-    gclient.subscribe(("hongrui/sw/C171Z1YM000000/event", 1))
-    gclient.subscribe(("hongrui/sw/C171Z1YM000000/period", 1))
+    gclient.subscribe([("hongrui/sw/C171Z1YM000000/rx", 1), ("hongrui/sw/C171Z1YM000000/event", 1), ("hongrui/sw/C171Z1YM000000/period", 1)])
     gclient.loop_start()
 
 
@@ -132,4 +130,6 @@ if __name__ == '__main__':
 
     glog = log_init(logfield_path)
     create_client(mqtt_client_id)
-    send_mqtt_set()
+    while True:
+        send_mqtt_set()
+        time.sleep(5)

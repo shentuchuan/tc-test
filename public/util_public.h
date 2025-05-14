@@ -22,19 +22,19 @@
 
 #include <arpa/inet.h>
 
-typedef signed char s8;
+typedef signed char   s8;
 typedef unsigned char u8;
 // typedef unsigned char uint8_t;
 
-typedef signed short s16;
+typedef signed short   s16;
 typedef unsigned short u16;
 // typedef unsigned short uint16_t;
 
-typedef signed int s32;
+typedef signed int   s32;
 typedef unsigned int u32;
 // typedef unsigned int uint32_t;
 
-typedef signed long long s64;
+typedef signed long long   s64;
 typedef unsigned long long u64;
 
 // typedef unsigned long long uint64_t;
@@ -53,8 +53,7 @@ typedef unsigned long long u64;
  *
  * Return: a result based on val in interval [0, ep_ro).
  */
-static inline u32 reciprocal_scale(u32 val, u32 ep_ro)
-{
+static inline u32 reciprocal_scale(u32 val, u32 ep_ro) {
     return (u32)(((u64)val * ep_ro) >> 32);
 }
 
@@ -91,14 +90,12 @@ static inline u32 reciprocal_scale(u32 val, u32 ep_ro)
 #endif
 
 #ifndef UTIL_FREE
-#define UTIL_FREE(x)   \
-    do                 \
-    {                  \
-        if (x != NULL) \
-        {              \
-            free(x);   \
-            x = NULL;  \
-        }              \
+#define UTIL_FREE(x)     \
+    do {                 \
+        if (x != NULL) { \
+            free(x);     \
+            x = NULL;    \
+        }                \
     } while (0)
 
 #endif
@@ -115,16 +112,17 @@ static inline u32 reciprocal_scale(u32 val, u32 ep_ro)
 #define util_log_debug(...) fprintf(stdout, __VA_ARGS__)
 #endif
 
-static inline long tv_diff_usec(struct timeval *tv1, struct timeval *tv2)
-{
+static inline long tv_diff_usec(struct timeval *tv1, struct timeval *tv2) {
     long usec = 0, sec = 0;
 
     usec = tv1->tv_usec - tv2->tv_usec;
-    sec = tv1->tv_sec - tv2->tv_sec;
+    sec  = tv1->tv_sec - tv2->tv_sec;
 
     return ((sec * 1000000 + usec));
 }
 
-static inline int tv_diff(long tv1, long tv2) { return (tv1 - tv2); }
+static inline int tv_diff(long tv1, long tv2) {
+    return (tv1 - tv2);
+}
 
 #endif

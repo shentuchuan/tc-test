@@ -33,30 +33,26 @@
 
 HashListTable *HashListTableInit(
     uint32_t size, uint32_t (*Hash)(struct HashListTable_ *, void *, uint16_t),
-    char (*Compare)(void *, uint16_t, void *, uint16_t), void (*Free)(void *))
-{
+    char (*Compare)(void *, uint16_t, void *, uint16_t), void (*Free)(void *)) {
     HashListTable *ht = NULL;
 
-    if (size == 0)
-    {
+    if (size == 0) {
         goto error;
     }
 
-    if (Hash == NULL)
-    {
+    if (Hash == NULL) {
         goto error;
     }
 
     /* setup the filter */
     ht = UTIL_MALLOC(sizeof(HashListTable));
-    if (unlikely(ht == NULL))
-    {
+    if (unlikely(ht == NULL)) {
         goto error;
     }
     memset(ht, 0, sizeof(HashListTable));
     ht->array_size = size;
-    ht->Hash = Hash;
-    ht->Free = Free;
+    ht->Hash       = Hash;
+    ht->Free       = Free;
 
     if (Compare != NULL)
         ht->Compare = Compare;
@@ -65,8 +61,7 @@ HashListTable *HashListTableInit(
 
     /* setup the bitarray */
     ht->array = UTIL_MALLOC(ht->array_size * sizeof(HashListTableBucket *));
-    if (ht->array == NULL)
-    {
+    if (ht->array == NULL) {
         goto error;
     }
     memset(ht->array, 0, ht->array_size * sizeof(HashListTableBucket *));
@@ -76,8 +71,7 @@ HashListTable *HashListTableInit(
     return ht;
 
 error:
-    if (ht != NULL)
-    {
+    if (ht != NULL) {
         if (ht->array != NULL)
             UTIL_FREE(ht->array);
 
@@ -86,19 +80,16 @@ error:
     return NULL;
 }
 
-void HashListTableFree(HashListTable *ht)
-{
+void HashListTableFree(HashListTable *ht) {
     uint32_t i = 0;
 
     if (ht == NULL)
         return;
 
     /* free the buckets */
-    for (i = 0; i < ht->array_size; i++)
-    {
+    for (i = 0; i < ht->array_size; i++) {
         HashListTableBucket *hashbucket = ht->array[i];
-        while (hashbucket != NULL)
-        {
+        while (hashbucket != NULL) {
             HashListTableBucket *next_hashbucket = hashbucket->bucknext;
             if (ht->Free != NULL)
                 ht->Free(hashbucket->data);
@@ -114,16 +105,14 @@ void HashListTableFree(HashListTable *ht)
     UTIL_FREE(ht);
 }
 
-void HashListTablePrint(HashListTable *ht)
-{
+void HashListTablePrint(HashListTable *ht) {
     util_log_debug("\n----------- Hash Table Stats ------------\n");
     util_log_debug("Buckets:               %" PRIu32 "\n", ht->array_size);
     util_log_debug("Hash function pointer: %p\n", ht->Hash);
     util_log_debug("-----------------------------------------\n");
 }
 
-int HashListTableAdd(HashListTable *ht, void *data, uint16_t datalen)
-{
+int HashListTableAdd(HashListTable *ht, void *data, uint16_t datalen) {
     if (ht == NULL || data == NULL)
         return -1;
 
@@ -135,32 +124,26 @@ int HashListTableAdd(HashListTable *ht, void *data, uint16_t datalen)
     if (unlikely(hb == NULL))
         goto error;
     memset(hb, 0, sizeof(HashListTableBucket));
-    hb->data = data;
-    hb->size = datalen;
+    hb->data     = data;
+    hb->size     = datalen;
     hb->bucknext = NULL;
     hb->listnext = NULL;
     hb->listprev = NULL;
 
-    if (ht->array[hash] == NULL)
-    {
+    if (ht->array[hash] == NULL) {
         ht->array[hash] = hb;
-    }
-    else
-    {
-        hb->bucknext = ht->array[hash];
+    } else {
+        hb->bucknext    = ht->array[hash];
         ht->array[hash] = hb;
     }
 
-    if (ht->listtail == NULL)
-    {
+    if (ht->listtail == NULL) {
         ht->listhead = hb;
         ht->listtail = hb;
-    }
-    else
-    {
-        hb->listprev = ht->listtail;
+    } else {
+        hb->listprev           = ht->listtail;
         ht->listtail->listnext = hb;
-        ht->listtail = hb;
+        ht->listtail           = hb;
     }
 
     return 0;
@@ -169,40 +152,30 @@ error:
     return -1;
 }
 
-int HashListTableRemove(HashListTable *ht, void *data, uint16_t datalen)
-{
+int HashListTableRemove(HashListTable *ht, void *data, uint16_t datalen) {
     uint32_t hash = ht->Hash(ht, data, datalen);
 
     util_log_debug("ht %p hash %" PRIu32 "", ht, hash);
 
-    if (ht->array[hash] == NULL)
-    {
+    if (ht->array[hash] == NULL) {
         util_log_debug("ht->array[hash] NULL");
         return -1;
     }
 
     /* fast track for just one data part */
-    if (ht->array[hash]->bucknext == NULL)
-    {
+    if (ht->array[hash]->bucknext == NULL) {
         HashListTableBucket *hb = ht->array[hash];
 
-        if (ht->Compare(hb->data, hb->size, data, datalen) == 1)
-        {
+        if (ht->Compare(hb->data, hb->size, data, datalen) == 1) {
             /* remove from the list */
-            if (hb->listprev == NULL)
-            {
+            if (hb->listprev == NULL) {
                 ht->listhead = hb->listnext;
-            }
-            else
-            {
+            } else {
                 hb->listprev->listnext = hb->listnext;
             }
-            if (hb->listnext == NULL)
-            {
+            if (hb->listnext == NULL) {
                 ht->listtail = hb->listprev;
-            }
-            else
-            {
+            } else {
                 hb->listnext->listprev = hb->listprev;
             }
 
@@ -220,35 +193,24 @@ int HashListTableRemove(HashListTable *ht, void *data, uint16_t datalen)
 
     /* more data in this bucket */
     HashListTableBucket *hashbucket = ht->array[hash], *prev_hashbucket = NULL;
-    do
-    {
-        if (ht->Compare(hashbucket->data, hashbucket->size, data, datalen) == 1)
-        {
+    do {
+        if (ht->Compare(hashbucket->data, hashbucket->size, data, datalen) == 1) {
             /* remove from the list */
-            if (hashbucket->listprev == NULL)
-            {
+            if (hashbucket->listprev == NULL) {
                 ht->listhead = hashbucket->listnext;
-            }
-            else
-            {
+            } else {
                 hashbucket->listprev->listnext = hashbucket->listnext;
             }
-            if (hashbucket->listnext == NULL)
-            {
+            if (hashbucket->listnext == NULL) {
                 ht->listtail = hashbucket->listprev;
-            }
-            else
-            {
+            } else {
                 hashbucket->listnext->listprev = hashbucket->listprev;
             }
 
-            if (prev_hashbucket == NULL)
-            {
+            if (prev_hashbucket == NULL) {
                 /* root bucket */
                 ht->array[hash] = hashbucket->bucknext;
-            }
-            else
-            {
+            } else {
                 /* child bucket */
                 prev_hashbucket->bucknext = hashbucket->bucknext;
             }
@@ -261,7 +223,7 @@ int HashListTableRemove(HashListTable *ht, void *data, uint16_t datalen)
         }
 
         prev_hashbucket = hashbucket;
-        hashbucket = hashbucket->bucknext;
+        hashbucket      = hashbucket->bucknext;
     } while (hashbucket != NULL);
 
     util_log_debug("slow track default case");
@@ -269,8 +231,7 @@ int HashListTableRemove(HashListTable *ht, void *data, uint16_t datalen)
 }
 
 char HashListTableDefaultCompare(void *data1, uint16_t len1, void *data2,
-                                 uint16_t len2)
-{
+                                 uint16_t len2) {
     if (len1 != len2)
         return 0;
 
@@ -280,24 +241,20 @@ char HashListTableDefaultCompare(void *data1, uint16_t len1, void *data2,
     return 1;
 }
 
-void *HashListTableLookup(HashListTable *ht, void *data, uint16_t datalen)
-{
-    if (ht == NULL)
-    {
+void *HashListTableLookup(HashListTable *ht, void *data, uint16_t datalen) {
+    if (ht == NULL) {
         util_log_debug("Hash List table is NULL");
         return NULL;
     }
 
     uint32_t hash = ht->Hash(ht, data, datalen);
 
-    if (ht->array[hash] == NULL)
-    {
+    if (ht->array[hash] == NULL) {
         return NULL;
     }
 
     HashListTableBucket *hashbucket = ht->array[hash];
-    do
-    {
+    do {
         if (ht->Compare(hashbucket->data, hashbucket->size, data, datalen) == 1)
             return hashbucket->data;
 
@@ -308,14 +265,12 @@ void *HashListTableLookup(HashListTable *ht, void *data, uint16_t datalen)
 }
 
 uint32_t HashListTableGenericHash(HashListTable *ht, void *data,
-                                  uint16_t datalen)
-{
+                                  uint16_t datalen) {
     uint8_t *d = (uint8_t *)data;
     uint32_t i;
     uint32_t hash = 0;
 
-    for (i = 0; i < datalen; i++)
-    {
+    for (i = 0; i < datalen; i++) {
         if (i == 0)
             hash += (((uint32_t)*d++));
         else if (i == 1)
@@ -329,8 +284,7 @@ uint32_t HashListTableGenericHash(HashListTable *ht, void *data,
     return hash;
 }
 
-HashListTableBucket *HashListTableGetListHead(HashListTable *ht)
-{
+HashListTableBucket *HashListTableGetListHead(HashListTable *ht) {
     return ht->listhead;
 }
 
@@ -339,8 +293,7 @@ HashListTableBucket *HashListTableGetListHead(HashListTable *ht)
  */
 
 #ifdef UNITTESTS
-static int HashListTableTestInit01(void)
-{
+static int HashListTableTestInit01(void) {
     HashListTable *ht =
         HashListTableInit(1024, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -351,8 +304,7 @@ static int HashListTableTestInit01(void)
 }
 
 /* no hash function, so it should fail */
-static int HashListTableTestInit02(void)
-{
+static int HashListTableTestInit02(void) {
     HashListTable *ht = HashListTableInit(1024, NULL, NULL, NULL);
     if (ht == NULL)
         return 1;
@@ -361,9 +313,8 @@ static int HashListTableTestInit02(void)
     return 0;
 }
 
-static int HashListTableTestInit03(void)
-{
-    int result = 0;
+static int HashListTableTestInit03(void) {
+    int            result = 0;
     HashListTable *ht =
         HashListTableInit(1024, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -376,8 +327,7 @@ static int HashListTableTestInit03(void)
     return result;
 }
 
-static int HashListTableTestInit04(void)
-{
+static int HashListTableTestInit04(void) {
     HashListTable *ht =
         HashListTableInit(0, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -387,9 +337,8 @@ static int HashListTableTestInit04(void)
     return 0;
 }
 
-static int HashListTableTestAdd01(void)
-{
-    int result = 0;
+static int HashListTableTestAdd01(void) {
+    int            result = 0;
     HashListTable *ht =
         HashListTableInit(32, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -407,9 +356,8 @@ end:
     return result;
 }
 
-static int HashListTableTestAdd02(void)
-{
-    int result = 0;
+static int HashListTableTestAdd02(void) {
+    int            result = 0;
     HashListTable *ht =
         HashListTableInit(32, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -427,9 +375,8 @@ end:
     return result;
 }
 
-static int HashListTableTestAdd03(void)
-{
-    int result = 0;
+static int HashListTableTestAdd03(void) {
+    int            result = 0;
     HashListTable *ht =
         HashListTableInit(32, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -439,14 +386,12 @@ static int HashListTableTestAdd03(void)
     if (r != 0)
         goto end;
 
-    if (ht->listhead == NULL)
-    {
+    if (ht->listhead == NULL) {
         util_log_debug("ht->listhead == NULL: ");
         goto end;
     }
 
-    if (ht->listtail == NULL)
-    {
+    if (ht->listtail == NULL) {
         util_log_debug("ht->listtail == NULL: ");
         goto end;
     }
@@ -459,9 +404,8 @@ end:
     return result;
 }
 
-static int HashListTableTestAdd04(void)
-{
-    int result = 0;
+static int HashListTableTestAdd04(void) {
+    int            result = 0;
     HashListTable *ht =
         HashListTableInit(32, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -476,21 +420,18 @@ static int HashListTableTestAdd04(void)
         goto end;
 
     HashListTableBucket *htb = HashListTableGetListHead(ht);
-    if (htb == NULL)
-    {
+    if (htb == NULL) {
         util_log_debug("htb == NULL: ");
         goto end;
     }
 
     char *rp2 = HashListTableGetListData(htb);
-    if (rp2 == NULL)
-    {
+    if (rp2 == NULL) {
         util_log_debug("rp2 == NULL: ");
         goto end;
     }
 
-    if (rp != rp2)
-    {
+    if (rp != rp2) {
         util_log_debug("rp != rp2: ");
         goto end;
     }
@@ -503,9 +444,8 @@ end:
     return result;
 }
 
-static int HashListTableTestFull01(void)
-{
-    int result = 0;
+static int HashListTableTestFull01(void) {
+    int            result = 0;
     HashListTable *ht =
         HashListTableInit(32, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -531,9 +471,8 @@ end:
     return result;
 }
 
-static int HashListTableTestFull02(void)
-{
-    int result = 0;
+static int HashListTableTestFull02(void) {
+    int            result = 0;
     HashListTable *ht =
         HashListTableInit(32, HashListTableGenericHash, NULL, NULL);
     if (ht == NULL)
@@ -560,8 +499,7 @@ end:
 }
 #endif /* UNITTESTS */
 
-void HashListTableRegisterTests(void)
-{
+void HashListTableRegisterTests(void) {
 #ifdef UNITTESTS
     UtRegisterTest("HashListTableTestInit01", HashListTableTestInit01);
     UtRegisterTest("HashListTableTestInit02", HashListTableTestInit02);

@@ -10,12 +10,11 @@
 
 #include "list.h"
 
-typedef struct rr_list
-{
+typedef struct rr_list {
     struct list_head lnode;
-    int ori_weight;
-    int cur_weight;
-    struct rr_list *fir;
+    int              ori_weight;
+    int              cur_weight;
+    struct rr_list  *fir;
 } rr_list_t;
 
 #endif
